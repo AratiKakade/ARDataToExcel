@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+
+		<!--
+			Andrew Hicox <andrew@hicox.com> - 3/26/18 - version 1
+			This HTML template renders a dialog to download ARS table data as
+			a CSV spreadsheet directly.
+
+			This template accepts the following parameters:
+
+				* jsonData
+				  this is the JSON datastructure returned from either the
+				  _exportAllRows() or _exportSelectedRows() functions
+				  (see jsFunctionsForFormViewHeader.html)
+
+				* titleHeader
+                  this string is shown in the header of the dialog template
+				  adjascent to the "Export as CSV Spreadsheet" button
+
+				* defaultShowColumns
+                  this is an array in javascript notation, containing the
+				  columns you would like to be shown in the preview by default
+				  when the user opens the dialog (the user can select additional
+				  columns or deselect the defaults once the dialog is open).
+				  An example value would be "['columnName1', 'columnName1']"
+
+				  NOTE however, if you're building that in work flow, the ticks
+				  will be a problem. It'll actually have to be constructed
+				  something like this:
+
+				  "[" + """" + "columnName1" + """" + ", " + """" + "columnName2" + """" + "]"
+
+				  column names are referenced by their DISPLAY NAME not database name in this
+				  context.
+
+				* fileNameBase
+				  the template will attempt to construct a unique filename each time the user
+				  clicks the download button. It will do this by appending the epoch timestamp
+				  to the end of the file name at the time the user clicks the button. The
+				  fileNameBase argument allows you to give the file a meaningful name that
+				  appears before the unique timestamp. For instance:
+
+						"DWP-export"				<- an example fileNameBase value
+						"DWP-export-1522077583.csv"	<- an example file name
+
+				* displayLimit
+				  By default, the dialog is going to show a preview of the first X rows in the
+				  export where X is defined by displayLimit. If the number of rows in the export
+				  is less than this number, we'll just show all rows. Otherwise we will show
+				  only this many with a user-friendly message explaining that
+		-->
+
+		<meta charset="utf-8" />
+
+        <!-- screen stylesheet -->
+		<style type="text/css">
+			/* body props */
+			body {
+				background-color:	#FFFFFF;
+				font-size:		    12px;
+				font-family:		Arial, Helvetica, sans-serif;
+                margin:             0;
+				background:			radial-gradient(rgba(255, 255, 255, .8), rgba(255, 255, 255, .5), rgba(100, 100, 100, .1));
+			}
+			#page-content {
+				display:		    block;
+				margin:			    0;
+                padding:            0;
+				overflow:		    hidden;
+
+			}
+			#header {
+				background-color:	#393939;
+				color:		        #F0F0F0;
+                font-size:          1em;
+				padding:		    .5em;
+                margin:             0;
+			}
+			fieldset {
+				float:				left;
+				background:			radial-gradient(rgba(255, 255, 255, .8), rgba(255, 255, 255, .5), rgba(100, 100, 100, .1));
+				box-shadow: 		5px 5px 3px rgba(100, 100, 100, .5);
+				border-radius: 		.5em;
+				border:				1px solid	#595959;
+				margin:				0 7px 7px 0;
+			}
+			table {
+				border-collapse:    collapse;
+			}
+			table tr {
+				border:				1px solid #595959;
+            }
+			table td, table th {
+				border:				1px solid #595959;
+				padding:			.25em;
+			}
+			table.list {
+				display:			inline-block;
+				margin:				.6em 0 0 1.6em;
+			}
+			table.list th {
+				font-weight: 		bolder;
+				background:         rgba(100, 100, 100, .5);
+			}
+			table.list tr:nth-child(odd){
+                background:         rgba(100, 100, 100, .05);
+            }
+			a.btn {
+				padding:			.5em;
+				background-color:   #505050;
+				color:				#F0F0F0;
+				border:				1px solid #F0F0F0;
+				border-radius:		.5em;
+				display:			inline-block;
+				text-decoration: 	none;
+			}
+			a.btn:hover, a.btn:active {
+				color:				#EDEC30;
+				border:				1px solid #DCDC9F;
+				background-color:   #5D5D5D;
+			}
+			#header h1 {
+				display:			inline-block;
+			}
+			#main {
+				display:			block;
+				overflow:			hidden;
+				margin:				1em;
+			}
+			#msg {
+				margin:				.25em 0 .5em 0;
+				font-size:			1.5em;
+			}
+			#tableContainer {
+				overflow:		    hidden;
+			}
+		</style>
+
+		<!-- script for setting some stuff up -->
+		<script type="text/javascript">
+
+            // just do the var subs here ... makes things lots easier
+            var jsonData        	= '${jsonData}';
+			var titleHeader			= '${titleHeader}';
+			var defaultShowColumns	= '${defaultShowColumns}';
+			var fileNameBase		= '${fileNameBase}';
+			var displayLimit		= '${displayLimit}';
+			var legendRendered  	= false;
+			var tableRendered   	= false;
+			var showColumns  		= {};
+			var csvHeader 			= [];
+			var csvBody				= [];
+
+			// parse defaultShowColumns from the template and set that up
+			let tmp = JSON.parse(defaultShowColumns);
+			tmp.forEach(function(val){ showColumns[val] = true; })
+
+			// handle making sure display limit is legit (an integer or 0)
+			displayLimit = parseInt(displayLimit);
+			if (isNaN(displayLimit)){ displayLimit = 0; }
+
+
+
+			// return true if we're in IE land
+			function isIE() {
+				var ua = window.navigator.userAgent;
+				if (
+					(/MSIE\s+/.test(window.navigator.userAgent)) ||
+					(/Trident.*rv\:11\./.test(window.navigator.userAgent)) ||
+					(/Edge\//.test(window.navigator.userAgent))
+				){
+					return(true);
+				}
+				return false;
+			}
+
+
+
+
+			/*
+			 	_uncleanIt(<string>)
+				we had to manually escape-encode reserved characters in the JSON string we sent into
+				this template because the BMC code that fires when we assign the output of the
+				JSON output of the javascript function to a char field so that we can send it into
+				the template actually decodes html entities when doing so.
+
+				Specifically it replaces &quot; with ", which in turn causes a JSON deserialization
+				issue.
+
+				SO ... what does this function do? This function manually decodes our special encoding
+				before we export the data to the CSV file.
+			*/
+			function _uncleanIt(str){
+				let strang = str.replace(/&#8220;/g, '“');
+				strang = strang.replace(/&#8221;/g, '”');
+				strang = strang.replace(/&#34;/g, '"');
+				strang = strang.replace(/&#39;/g, "'");
+				strang = strang.replace(/&#96;/g, "`");
+				strang = strang.replace(/&#180;/g, "´");
+				return(strang)
+			}
+
+
+
+			// execute on page load
+			document.addEventListener("DOMContentLoaded", function(evt){
+				if (! legendRendered){
+
+					// parse the data, build the legend and the table
+					let data = JSON.parse(jsonData);
+					legendRendered = renderLegend(document.getElementById('legendContainer'), data);
+					tableRendered  = renderTable(document.getElementById('tableContainer'), data);
+
+					// yes ES6 lets us do it better, but everyone ain't there yet so here we go ...
+					// this is sticking the hooks on the column selectors in the legend
+					let selectas = document.getElementsByClassName('colSel');
+					for (let i = 0; i < selectas.length; i++){
+						selectas[i].addEventListener('click', function(){
+							let that = this;
+							setTimeout(function(){
+								showColumns[that.id] = that.checked;
+								renderTable(document.getElementById('tableContainer'), data);
+							})
+						});
+					}
+				}
+
+				// override the download anchor link for IE
+				if (isIE()){
+					let btnRef = document.getElementById('btnExport');
+					btnRef.addEventListener('click', overrideAnchorClickForIE);
+				}
+
+			});
+
+			// update the message
+			function updateMessage(msg){
+				setTimeout(function(){ document.getElementById('msg').innerHTML = msg; });
+			}
+
+			// empty then render the legend
+			function renderLegend(domRef, data){
+				let html = ['<fieldset><legend>Select Columns to Include</legend>'];
+				csvHeader = [];
+				if (data.hasOwnProperty('colHeader')){
+					data.colHeader.forEach(function(colName){
+						html.push('<div><input type="checkbox" class="colSel" id="' + colName + '" value="' + colName + '" ');
+						if ((showColumns.hasOwnProperty(colName)) && (showColumns[colName] === true)){
+							csvHeader.push(colName)
+							html.push(' checked');
+						}
+						html.push('><label for="' + colName + '">' + colName + '</label></div>');
+					});
+				}
+				html.push('</fieldset>');
+				domRef.innerHTML = html.join("");
+				return(true);
+			}
+
+			// rebuilds and renders the preview table
+			function renderTable(domRef, data){
+				let html             = ['<table class="list">'];
+				csvBody				 = [];
+				let numRemainingRows = 0;
+
+				/* table header */
+				csvHeader = [];
+				if (data.hasOwnProperty('colHeader')){
+					html.push('<tr id="piListHeader">');
+					data.colHeader.forEach(function(colName){
+						if ((showColumns.hasOwnProperty(colName)) && (showColumns[colName] === true)){
+							csvHeader.push(colName);
+							html.push('<th>' + colName + '</th>');
+						}
+					});
+					html.push('</tr>');
+				}
+
+				/* table data */
+				if (data.hasOwnProperty('rowDB')){
+					data.rowDB.forEach(function(piRow, rowNum){
+						let showRow = true;
+						if ((rowNum >= displayLimit) && (displayLimit > 0)){ showRow = false; numRemainingRows ++; }
+						if (showRow){ html.push('<tr class="piListRow">'); }
+						csvBody.push([])
+						piRow.forEach(function(colData, idx){
+							if ((showColumns.hasOwnProperty(data.colHeader[idx])) && (showColumns[data.colHeader[idx]] === true)){
+								csvBody[(csvBody.length -1)].push(decodeURIComponent(colData));
+								if (showRow){ html.push('<td>' + decodeURIComponent(colData) + '</td>'); }
+							}
+						});
+						if (showRow){ html.push('</tr>'); }
+					});
+				}
+				html.push('</table>');
+				domRef.innerHTML = html.join("");
+				if ((data.hasOwnProperty('rowDB')) && (displayLimit < (csvBody.length -1))){
+					updateMessage('Showing first ' + displayLimit + ' rows (' + numRemainingRows + ' additional rows in export)');
+				}else{
+					updateMessage('Showing ' + (csvBody.length -1) + ' rows (all)');
+				}
+
+				// if it's not IE, just go ahead and update the data on the link
+				if (! isIE()){
+					let btnRef = document.getElementById('btnExport');
+					let downloadData = getDownloadData();
+					btnRef.href = 'data:text/csv;charset=UTF-8,' + encodeURIComponent(downloadData.csvData);
+					btnRef.download = downloadData.filename;
+
+				}
+
+				return(true);
+			}
+
+
+
+			/*
+				getDownloadData()
+				return a datastructure with a uniqueish filename
+				and the formatted csv data
+			*/
+			function getDownloadData(){
+
+				// get a unique-ish Filename
+				let d = new Date();
+				let epoch = Math.round(d.getTime() / 1000);
+				if (/^\s*$/.test(fileNameBase)){ fileNameBase = 'NITSM-CSV-Export'; }
+				let fileName = fileNameBase + "-" + epoch + ".csv";
+
+				// build the data
+				let csvData = [];
+				csvBody.unshift(csvHeader);
+				csvBody.forEach(function(row, rowNum){
+					let rowTmp = []
+					row.forEach(function(col, colNum){
+						rowTmp.push(_uncleanIt(col));
+						rowTmp[(rowTmp.length -1)].replace(/\n/g, "");
+						rowTmp[(rowTmp.length -1)].replace(/\r/g, "");
+						rowTmp[(rowTmp.length -1)].replace(/"/g, '""');
+
+						/*
+							ATTN MicroSoft, this is the CSV spec:
+							https://en.wikipedia.org/wiki/Comma-separated_values
+
+							optionally enclosing every cell in quotes is part of the spec
+							and SHOULD NOT CAUSE A PROBLEM. Yet it does in Excel, hence
+							this line is commented out:
+
+							rowTmp[(rowTmp.length -1)] = '"' + rowTmp[(rowTmp.length -1)] + '"';
+						*/
+					});
+					csvData.push(rowTmp.join(","));
+				});
+
+				return({
+					'csvData': csvData.join("\n"),
+					'filename': fileName
+				});
+			}
+
+
+			/*
+				for IE, scoop the data, define the blob then present the download
+				when someone clicks the button
+			*/
+			function overrideAnchorClickForIE(){
+				let s = getDownloadData();
+				let myBlob = new Blob([s.csvData], {type: "text/csv;charset=utf-8;"});
+				navigator.msSaveBlob(myBlob, s.filename);
+			}
+        </script>
+
+        <title>${titleHeader} Export</title>
+	</head>
+	<body>
+        <div id="page-content">
+			<div id="header">
+				<a class="btn highlight" id="btnExport">Export as CSV Spreadsheet</a>
+				<h1 id="header">${titleHeader}</h1>
+			</div>
+			<div id="main">
+				<h1 id="msg"></h1>
+				<div class="infoSection" id="legendContainer">
+					<!-- insert legend here -->
+				</div>
+				<div class="infoSection" id="tableContainer">
+					<!-- insert table here -->
+				</div>
+			</div>
+        </div>
+    </body>
+</html>

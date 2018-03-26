@@ -1,0 +1,133 @@
+<script>
+/*
+    these functions are required to enable CSV export of tables.
+    include them in the view header of whatever form you want
+    to export tables to CSV from.
+
+    If you're embedding forms in view fields, you will need to have
+    these functions in the view header of the root level form (so for
+    instance SHR:LandingConsole would need these functions
+    in the view header for ITSM modules to export tables to CSV)
+*/
+
+
+/*
+    _cleanIt(string)
+    when we assign the output of either of the two functions
+    to a char field (so we can send it to the template),
+    ARS is decoding html entities. This causes problems with
+    quotes, tabs and line returns that we have escaped for
+    JSON. Hence we've gotta do this here, then undo it in
+    the template before we dump it out CSV ...
+*/
+function _cleanIt(str){
+    let strang = str.replace(/\n/g, '');
+    strang = strang.replace(/\r/g, '');
+    strang = strang.replace(/\t/g, '    ');
+    strang = strang.replace(/\“/g, '&#8220;');
+    strang = strang.replace(/\”/g, '&#8221;');
+    strang = strang.replace(/\"/g, '&#34;');
+    strang = strang.replace(/\'/g, '&#39;');
+    strang = strang.replace(/\`/g, '&#96;');
+    strang = strang.replace(/\´/g, '&#180;');
+    strang = strang.replace(/&quot;/g, '&#34;');
+    return(strang);
+}
+
+
+
+
+/*
+    _exportSelectedRows(integer)
+    dump data for all columns on all SELECTED rows in the table field
+    identified by tableFieldID, into the JSON data structure needed for
+    the CSV export dialog
+*/
+function _exportSelectedRows(tableFieldID){
+
+    // set up the empty data structure for export to the template
+    let myData = {
+            colHeader: [],
+            rowDB:     []
+    };
+
+    // get a list of all the tables the window knows about
+    getTableFields_NS(getCurrentWindowID_NS()).forEach(function(obj){
+
+        // find the table object we're looking for
+        if (obj.hasOwnProperty('mID') && (obj.mID == tableFieldID)){
+
+            // set up the column header
+            obj.mColInfo.forEach(function(col){
+                myData.colHeader.push(col.heading);
+            });
+
+            // insert the data from selected rows
+            if (obj.hasOwnProperty('mRowSelections')){
+                   for (var k in obj.mRowSelections){
+                        myData.rowDB.push([]);
+                        obj.mResult.r[obj.mResult.idmap[k]].d.forEach(function(col){
+                            if (col.hasOwnProperty('v')){
+                                myData.rowDB[(myData.rowDB.length - 1)].push(_cleanIt(col.v));
+                            } else if (col.hasOwnProperty('p')){
+                                myData.rowDB[(myData.rowDB.length - 1)].push(_cleanIt(col.p));
+                            }else{
+                                myData.rowDB[(myData.rowDB.length - 1)].push("");
+                            }
+                        });
+                    }
+            }
+        }
+    });
+    return(JSON.stringify(myData));
+}
+
+
+
+/*
+    _exportAllRows(integer)
+    dump data for all columns on ALL rows (selected or not) in the table
+    field identified by tableFieldID, into the JSON data structure needed
+    for the CSV export dialog
+*/
+function _exportAllRows(tableFieldID){
+
+    // set up the empty data structure for export to the template
+    let myData = {
+            colHeader: [],
+            rowDB:     []
+    };
+
+    // get a list of all the tables the window knows about
+    getTableFields_NS(getCurrentWindowID_NS()).forEach(function(obj){
+
+        // find the table object we're looking for
+        if (obj.hasOwnProperty('mID') && (obj.mID == tableFieldID)){
+
+            // set up the column header
+            obj.mColInfo.forEach(function(col){
+                myData.colHeader.push(col.heading);
+            });
+
+            // insert the data from all rows
+            if (obj.hasOwnProperty('mResult') && (obj.mResult.hasOwnProperty('r'))){
+                obj.mResult.r.forEach(function(row){
+                    myData.rowDB.push([]);
+                    if (row.hasOwnProperty('d')){
+                        row.d.forEach(function(col){
+                            if (col.hasOwnProperty('v')){
+                                myData.rowDB[(myData.rowDB.length - 1)].push(_cleanIt(col.v));
+                            } else if (col.hasOwnProperty('p')){
+                                myData.rowDB[(myData.rowDB.length - 1)].push(_cleanIt(col.p));
+                            }else{
+                                myData.rowDB[(myData.rowDB.length - 1)].push("");
+                            }
+                        });
+                    }
+                });
+            }
+        }
+    });
+    return(JSON.stringify(myData));
+}
+</script>
