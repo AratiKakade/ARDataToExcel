@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+
+		<!--
+			Andrew Hicox <andrew@hicox.com> - 4/5/18 - version 2
+			This HTML template renders a dialog to download ARS table data as
+			a CSV spreadsheet directly. This version requires NO javascript hooks
+			in the form. All that you need to do to use this is to open the template
+			with these parameters:
+
+				* windowName
+				  this identifies the window in which the table you want to export exists.
+				  this would be the value of $CURRENTWINID$ inside workflow
+
+				* arServer
+				  this identifies the server on which the form containing the table you want
+				  to export exists. Most times, this will be the value of $SERVER$ in workflow
+				  but it is possible you may have a view field on screen that pulls a form
+				  from a different ARServer, if that's the case, specify that server here
+				  so that we can be sure we get the right table.
+
+				* formName
+				  this identifies the form on which the table you want to export exists.
+				  this is necessary, in case you have forms loaded in view fields which
+				  contain tables with the same field ID as the one you're looking for.
+				  Most times this will be $SCHEMA$ in workflow
+
+				* viewName
+				  the value of $VUI$ on which the table you want to export resides.
+				  this is necessary because it's possible you might have the same
+				  form loaded in different views within multiple view fields
+
+				* tableID
+				  this is the fieldID of the table field you want to export.
+
+				* titleHeader
+                  this string is shown in the header of the dialog template
+				  adjascent to the "Export as CSV Spreadsheet" button
+
+				* defaultShowColumns
+                  this is an array in javascript notation, containing the
+				  columns you would like to be shown in the preview by default
+				  when the user opens the dialog (the user can select additional
+				  columns or deselect the defaults once the dialog is open).
+				  An example value would be "['columnName1', 'columnName2']"
+
+				  NOTE however, if you're building that in work flow, the ticks
+				  will be a problem. It'll actually have to be constructed
+				  something like this:
+
+				  "[" + """" + "columnName1" + """" + ", " + """" + "columnName2" + """" + "]"
+
+				  column names are referenced by their DISPLAY NAME not database name in this
+				  context.
+
+				* fileNameBase
+				  the template will attempt to construct a unique filename each time the user
+				  clicks the download button. It will do this by appending the epoch timestamp
+				  to the end of the file name at the time the user clicks the button. The
+				  fileNameBase argument allows you to give the file a meaningful name that
+				  appears before the unique timestamp. For instance:
+
+						"DWP-export"				<- an example fileNameBase value
+						"DWP-export-1522077583.csv"	<- an example file name
+
+				* displayLimit
+				  By default, the dialog is going to show a preview of the first X rows in the
+				  export where X is defined by displayLimit. If the number of rows in the export
+				  is less than this number, we'll just show all rows. Otherwise we will show
+				  only this many with a user-friendly message explaining that
+		-->
+
+		<meta charset="utf-8" />
+
+        <!-- screen stylesheet -->
+		<style type="text/css">
+			/* body props */
+			body {
+				background-color:	#FFFFFF;
+				font-size:		    12px;
+				font-family:		Arial, Helvetica, sans-serif;
+                margin:             0;
+				background:			radial-gradient(rgba(255, 255, 255, .8), rgba(255, 255, 255, .5), rgba(100, 100, 100, .1));
+			}
+			#page-content {
+				display:		    block;
+				margin:			    0;
+                padding:            0;
+				overflow:		    hidden;
+
+			}
+			#header {
+				background-color:	#393939;
+				color:		        #F0F0F0;
+                font-size:          1em;
+				padding:		    .5em;
+                margin:             0;
+			}
+			fieldset {
+				float:				left;
+				background:			radial-gradient(rgba(255, 255, 255, .8), rgba(255, 255, 255, .5), rgba(100, 100, 100, .1));
+				box-shadow: 		5px 5px 3px rgba(100, 100, 100, .5);
+				border-radius: 		.5em;
+				border:				1px solid	#595959;
+				margin:				0 7px 7px 0;
+			}
+			table {
+				border-collapse:    collapse;
+			}
+			table tr {
+				border:				1px solid #595959;
+            }
+			table td, table th {
+				border:				1px solid #595959;
+				padding:			.25em;
+			}
+			table.list {
+				display:			inline-block;
+				margin:				.6em 0 0 1.6em;
+			}
+			table.list th {
+				font-weight: 		bolder;
+				background:         rgba(100, 100, 100, .5);
+			}
+			table.list tr:nth-child(odd){
+                background:         rgba(100, 100, 100, .05);
+            }
+			a.btn {
+				padding:			.5em;
+				background-color:   #505050;
+				color:				#F0F0F0;
+				border:				1px solid #F0F0F0;
+				border-radius:		.5em;
+				display:			inline-block;
+				text-decoration: 	none;
+			}
+			a.btn:hover, a.btn:active {
+				color:				#EDEC30;
+				border:				1px solid #DCDC9F;
+				background-color:   #5D5D5D;
+			}
+			a.btnDisabled {
+				padding:			.5em;
+				background-color:   #7F7F7F;
+				color:				#9C9C9C;
+				border:				1px solid #9C9C9C;
+				border-radius:		.5em;
+				display:			inline-block;
+				text-decoration: 	none;
+			}
+			#header h1 {
+				display:			inline-block;
+				font-size:          1em;
+				padding:		    .5em;
+			}
+			.crash {
+				color:				#E600A1;
+			}
+			.hideMe {
+				display:			none;
+			}
+			#main {
+				display:			block;
+				overflow:			hidden;
+				margin:				1em;
+				background-repeat:	no-repeat;
+				padding-left:		4em;
+			}
+			#msg {
+				margin:				.25em 0 .5em 0;
+				font-size:			1.5em;
+			}
+			#tableContainer {
+				overflow:		    hidden;
+			}
+
+		</style>
+
+		<!-- script for setting some stuff up -->
+		<script type="text/javascript">
+
+            // just do the var subs here ... makes things lots easier
+			var titleHeader			= '${titleHeader}';
+			var defaultShowColumns	= '${defaultShowColumns}';
+			var fileNameBase		= '${fileNameBase}';
+			var displayLimit		= '${displayLimit}';
+			var exportSelectedOnly	= '${exportSelectedOnly}';
+			var exportAllChunks		= '${exportAllChunks}';
+
+			var windowName          = '${windowName}';
+            var arServer            = '${arServer}';
+            var formName            = '${formName}';
+            var viewName            = '${viewName}';
+            var tableID             = '${tableID}';
+
+
+			var legendRendered  	= false;
+			var tableRendered   	= false;
+			var showColumns  		= {};
+			var csvHeader 			= [];
+			var csvBody				= [];
+			var isCrashed			= false;
+
+			// update the message
+			function updateMessage(msg){
+				setTimeout(function(){ document.getElementById('msg').innerHTML = msg; });
+			}
+
+			// update the header message
+			function updateHeaderMessage(msg){
+				setTimeout(function(){ document.getElementById('headerMsg').innerHTML = msg; });
+			}
+
+			// return true if we're in the third circle of IT hell ...
+			function isIE() {
+				var ua = window.navigator.userAgent;
+				if (
+					(/MSIE\s+/.test(window.navigator.userAgent)) ||
+					(/Trident.*rv\:11\./.test(window.navigator.userAgent)) ||
+					(/Edge\//.test(window.navigator.userAgent))
+				){
+					return(true);
+				}
+				return false;
+			}
+
+
+
+
+			/*
+				polyfill shims for internet exporer
+				thx stackoverflow. you da real MVP
+			*/
+			function hasClass(element, cls) {
+    			return (' ' + element.className + ' ').indexOf(' ' + cls + ' ') > -1;
+			}
+
+			function removeClass(elem, name) {
+			   if  (isIE()){
+				   if (hasClass(elem, name)) {
+				      elem.className=elem.className.replace(new RegExp('(\\s|^)'+name+'(\\s|$)'),' ').replace(/^\s+|\s+$/g, '');
+				    }
+				}else{
+					elem.classList.remove(name);
+				}
+			}
+
+			function addClass(elem, className){
+				if (isIE()){
+				    if (elem.className.indexOf(className) == -1) {
+				        elem.className += className;
+				    }
+				}else{
+					elem.classList.add(className);
+				}
+			}
+
+
+
+
+			/*
+				getTable({windowName, arServer, formName, viewName, tableID})
+				find the table we're looking for from the formContextManager
+				in the top-level window's ClientCore.js.
+
+				returns the table object or boolean false
+			*/
+			function getTable(tableMeta){
+				let foundTables = [];
+				if (window.top.hasOwnProperty('fc') && window.top.fc.hasOwnProperty('formContexts')){
+					Object.keys(window.top.fc.formContexts).forEach(function(k){
+                        let win = window.top.fc.formContexts[k];
+
+						// if the window is the right one and has tables ...
+						if (
+							(win.windowName == tableMeta.windowName) &&
+							(win.server == tableMeta.arServer) &&
+							(win.formName == tableMeta.formName) &&
+							(win.view == tableMeta.viewName) &&
+							(win.hasOwnProperty('TableFields'))
+						){
+							// check the fieldID of each table in the window/server/form/view
+							win.TableFields.forEach(function(tableObject){
+								if (tableObject.hasOwnProperty('mID') && (tableObject.mID == tableMeta.tableID)){
+									foundTables.push(tableObject);
+								}
+							});
+						}
+					});
+
+				}else{
+
+					// no clientCore.js in the top window
+					throw("cannot find ClientCore.js formContextManager in top window!");
+				}
+
+				if (foundTables.length < 1){
+					// no tables found
+					throw("cannot find the specified table!");
+				}else if (foundTables.length == 1){
+					return(foundTables[0]);
+				}else if (foundTables.length > 1){
+					console.log("multiple matched tables: using first");
+					return(foundTables[0]);
+				}
+			}
+
+
+
+
+			/*
+				getTableData(tableObject, selectedRowsOnly, chaseTableChunks)
+				scoop rows from the tableObject and export a data structure
+				compatible with rendering the preview and exporting, etc.
+
+				 	* tableObject 			is the object returned from getTable()
+					* selectedRowsOnly		(bool) if true, only extract selected rows
+					* chaseTableChunks		(bool) if true, pull data from all chunks of the table (if chunked)
+											only works if selectedRowsOnly is false (as we can only select rows)
+											within a given table chunk without shenanigans in the form's view header
+
+				returns the datastructure or boolean false
+			*/
+			function getTableData(tableObject, selectedRowsOnly, chaseTableChunk){
+
+				// set up the empty data structure for export
+			    let myData = {
+		            colHeader: [],		// column headers
+		            rowDB:     []		// rows and columns
+			    };
+
+				// set up the column header
+				if (! tableObject.hasOwnProperty('mColInfo')){
+					throw("cannot find the table's column names!");
+				}
+				tableObject.mColInfo.forEach(function(col){ myData.colHeader.push(col.heading); });
+
+				// if we've got selected rows
+				if (selectedRowsOnly){
+					if (tableObject.hasOwnProperty('mRowSelections')){
+						for (var k in tableObject.mRowSelections){
+	                         myData.rowDB.push([]);
+	                         tableObject.mResult.r[tableObject.mResult.idmap[k]].d.forEach(function(col){
+	                             if (col.hasOwnProperty('v')){
+	                                 myData.rowDB[(myData.rowDB.length - 1)].push(col.v);
+	                             } else if (col.hasOwnProperty('p')){
+	                                 myData.rowDB[(myData.rowDB.length - 1)].push(col.p);
+	                             }else{
+	                                 myData.rowDB[(myData.rowDB.length - 1)].push("");
+	                             }
+	                         });
+	                     }
+					}else{
+						throw("export selected rows mode cannot find selected rows!");
+					}
+
+				// if we've got all rows
+				}else{
+
+					/*
+						LEFT OFF HERE - 4/11/18 @ 1030
+						everything works except up to here on FFox, Chrome, IE and Edge
+						next step is to work out how to handle grabbing all table chunks
+
+						for one thing it's probably not a good idea to do that inside the
+						function that builds the table preview (on checkbox column select)
+
+						for another thing, it's open ended ... and it needs to talk to the
+						server, so we're gonna need a progress bar or something ...
+
+					*/
+
+					// insert the data from all rows
+		            if (tableObject.hasOwnProperty('mResult') && (tableObject.mResult.hasOwnProperty('r'))){
+		                tableObject.mResult.r.forEach(function(row){
+		                    myData.rowDB.push([]);
+		                    if (row.hasOwnProperty('d')){
+		                        row.d.forEach(function(col){
+		                            if (col.hasOwnProperty('v')){
+		                                myData.rowDB[(myData.rowDB.length - 1)].push(col.v);
+		                            } else if (col.hasOwnProperty('p')){
+		                                myData.rowDB[(myData.rowDB.length - 1)].push(col.p);
+		                            }else{
+		                                myData.rowDB[(myData.rowDB.length - 1)].push("");
+		                            }
+		                        });
+		                    }
+		                });
+		            }else{
+						throw("export all rows mode cannot find any rows in the table!");
+					}
+				}
+	            return(myData);
+			}
+
+
+
+
+			/*
+				crashMeNicely(e)
+				something has thrown an error, and we need to show that to the user nicely
+				and gracefully lock out any further options than closing the window.
+			*/
+			function crashMeNicely(e){
+				isCrashed = true;
+				updateMessage("export failed: " + e);
+				updateHeaderMessage("export failed");
+				addClass(document.getElementById('headerMsg'), "crash");
+				addClass(document.getElementById('msg'),"crash");
+				removeClass(document.getElementById('dammitIE'), "hideMe");
+				removeClass(document.getElementById('btnExport'), "btn");
+				addClass(document.getElementById('btnExport'), "btnDisabled");
+			}
+
+
+
+
+			/*
+				renderLegend(domRef, data)
+				render the legend into the specified domRef, derived from the specified data
+			*/
+			function renderLegend(domRef, data){
+				let html = ['<fieldset><legend>Select Columns to Include</legend>'];
+				if (data.hasOwnProperty('colHeader')){
+					data.colHeader.forEach(function(colName){
+						html.push('<div><input type="checkbox" class="colSel" id="' + colName + '" value="' + colName + '" ');
+						if ((showColumns.hasOwnProperty(colName)) && (showColumns[colName] === true)){
+							csvHeader.push(colName)
+							html.push(' checked');
+						}
+						html.push('><label for="' + colName + '">' + colName + '</label></div>');
+					});
+				}
+				html.push('</fieldset>');
+				domRef.innerHTML = html.join("");
+
+				// set up the hooks
+				let selectas = document.getElementsByClassName('colSel');
+				for (let i = 0; i < selectas.length; i++){
+					selectas[i].addEventListener('click', function(){
+						let that = this;
+						setTimeout(function(){
+							showColumns[that.id] = that.checked;
+							renderTable(document.getElementById('tableContainer'), data);
+						})
+					});
+				}
+				return(true);
+			}
+
+
+
+
+			/*
+				renderTable(domRef, data)
+			*/
+			function renderTable(domRef, data){
+				let html             = ['<table class="list">'];
+
+				/* table header */
+				if (data.hasOwnProperty('colHeader')){
+					html.push('<tr id="piListHeader">');
+					data.colHeader.forEach(function(colName){
+						if ((showColumns.hasOwnProperty(colName)) && (showColumns[colName] === true)){
+							html.push('<th>' + colName + '</th>');
+						}
+					});
+					html.push('</tr>');
+				}
+
+				/* table data */
+				if (data.hasOwnProperty('rowDB')){
+
+					let limit = displayLimit;
+					if ((limit == 0) || (data.rowDB.length < limit)){ limit = data.rowDB.length; }
+
+					if (limit < (data.rowDB.length -1)){
+						updateMessage('Showing first ' + displayLimit + ' rows (' + ((data.rowDB.length -1) - limit) + ' additional rows in export)');
+					}else{
+						updateMessage('Showing ' + (data.rowDB.length -1) + ' rows (all)');
+					}
+
+					for (let i = 0; i < limit; i++){
+						html.push('<tr class="piListRow">');
+						data.rowDB[i].forEach(function(colData, idx){
+							if ((showColumns.hasOwnProperty(data.colHeader[idx])) && (showColumns[data.colHeader[idx]] === true)){
+								html.push('<td>' + colData + '</td>');
+							};
+						});
+						html.push('</tr>');
+					}
+
+				}
+				html.push('</table>');
+				domRef.innerHTML = html.join("");
+
+				// if it's not IE, just go ahead and update the data on the link
+				if (! isIE()){
+					let btnRef = document.getElementById('btnExport');
+					let downloadData = getDownloadData(data);
+					btnRef.href = 'data:text/csv;charset=UTF-8,' + encodeURIComponent(downloadData.csvData);
+					btnRef.download = downloadData.filename;
+				}
+				return(true);
+			}
+
+
+			/*
+				decodeHTMLEntities(string)
+				my google-fu tells me this is the most legit way to decode HTML entities in a string
+				the column values we're retrieving from the clientCore's formContextManager table
+				list, are thoughtfully pre-encoded with html entities that excel/csv does not understand.
+			*/
+			function decodeHTMLEntities(str){
+				return(new DOMParser().parseFromString(str, "text/html").documentElement.textContent);
+			}
+
+
+			/*
+				getDownloadData(data)
+				return a data structure with a uniqueish filename
+				and the formatted CSV data
+			*/
+			function getDownloadData(data){
+
+				// get a unique-ish Filename
+				let d = new Date();
+				let epoch = Math.round(d.getTime() / 1000);
+				if (/^\s*$/.test(fileNameBase)){ fileNameBase = 'CSV-Export'; }
+				let fileName = fileNameBase + "-" + epoch + ".csv";
+
+				// build the data
+				let csvData = [[]];
+
+				// set up the column header
+				data.colHeader.forEach(function(colName){
+					if ((showColumns.hasOwnProperty(colName)) && (showColumns[colName] === true)){
+						csvData[0].push(colName);
+					}
+				});
+				csvData[0] = csvData[0].join(", ");
+
+				// set up the rows
+				// https://en.wikipedia.org/wiki/Comma-separated_values
+				data.rowDB.forEach(function(row){
+					csvData.push([]);
+					row.forEach(function(colData, idx){
+						if ((showColumns.hasOwnProperty(data.colHeader[idx])) && (showColumns[data.colHeader[idx]] === true)){
+							let strang = decodeHTMLEntities(colData);
+							strang = strang.replace(/\n/g, '');
+						    strang = strang.replace(/\r/g, '');
+						    strang = strang.replace(/\t/g, '    ');
+							strang = strang.replace(/\"/g, '""');
+						    strang = strang.replace(/\“/g, '""');
+						    strang = strang.replace(/\”/g, '""');
+
+							/*
+								enclose anything containing an escaped double quote
+								... with a double quote.
+							*/
+							if (/\"/.test(strang)){
+								csvData[(csvData.length -1)].push('"' + strang + '"')
+							}else{
+								csvData[(csvData.length -1)].push(strang)
+							}
+						}
+					});
+					csvData[(csvData.length -1)] = csvData[(csvData.length -1)].join(",");
+				});
+				return({
+					'csvData': csvData.join("\n"),
+					'filename': fileName
+				});
+			}
+
+
+
+
+			/*
+				this event listener fires the function once page load is complete
+			*/
+			document.addEventListener("DOMContentLoaded", function(evt){
+
+				// get the table data or die tryin' like fiddy ...
+				try  {
+
+					// check that tableID can be coerced into a valid integer
+					tableID = parseInt(tableID);
+					if (isNaN(tableID)){ throw ("'tableID' is not a invalid valid ARS Field ID"); }
+
+					// handle making sure display limit is legit (an integer or 0)
+					displayLimit = parseInt(displayLimit);
+					if (isNaN(displayLimit)){ displayLimit = 0; }
+
+					// check the rest of the required template arguments
+					if (/^\s*$/.test(windowName)){ throw("'windowName' template argument is null"); }
+					if (/^\s*$/.test(arServer)){   throw("'arServer' template argument is null");   }
+					if (/^\s*$/.test(formName)){   throw("'formName' template argument is null");   }
+					if (/^\s*$/.test(viewName)){   throw("'viewName' template argument is null");   }
+
+					// parse defaultShowColumns from the template and set that up
+					let tmp = JSON.parse(defaultShowColumns);
+					tmp.forEach(function(val){ showColumns[val] = true; })
+
+					// coerce exportSelectedOnly and exportAllChunks into bools
+					if (
+						(/^\s*$/.test(exportSelectedOnly)) ||
+						(/^\s*false\s*$/i.test(exportSelectedOnly)) ||
+						(/^\s*null\s*$/i.test(exportSelectedOnly)) ||
+						(exportSelectedOnly === undefined) ||
+						(exportSelectedOnly === null)
+					){ exportSelectedOnly = false; }else{ exportSelectedOnly = true; }
+
+					if (
+						(/^\s*$/.test(exportAllChunks)) ||
+						(/^\s*false\s*$/i.test(exportAllChunks)) ||
+						(/^\s*null\s*$/i.test(exportAllChunks)) ||
+						(exportAllChunks === undefined) ||
+						(exportAllChunks === null)
+					){ exportAllChunks = false; }else{ exportAllChunks = true; }
+
+					// find the table in question and get the data from it if we can
+					var data = getTableData(getTable({
+						'windowName':	windowName,
+						'arServer':		arServer,
+						'formName':		formName,
+						'viewName':		viewName,
+						'tableID':		tableID
+					}), exportSelectedOnly, exportAllChunks);
+
+					// if there aren't any rows to show, crash it
+					if (data.rowDB.length < 1){
+						if (exportSelectedOnly){
+							throw("Export Selected mode is enabled, and no rows are selected to export");
+						}else{
+							throw("The table is not loaded or contains no rows");
+						}
+					}
+
+					// set up the legend
+					legendRendered = renderLegend(document.getElementById('legendContainer'), data);
+					tableRendered  = renderTable(document.getElementById('tableContainer'), data);
+
+					// if it's ie, we have to do the download button differently
+					if (isIE()){
+						let btnRef = document.getElementById('btnExport');
+						btnRef.addEventListener('click', function(evt){
+							let s = getDownloadData(data);
+							let myBlob = new Blob([s.csvData], {type: "text/csv;charset=utf-8;"});
+							navigator.msSaveBlob(myBlob, s.filename);
+						});
+					}
+
+				}catch(e){
+					// crash it nicely with a message
+					crashMeNicely(e);
+				}
+
+				// set up the header title
+				if (/^\s*$/.test(titleHeader)){ titleHeader = "export table: " + tableID + " to csv"; }
+				updateHeaderMessage(titleHeader);
+
+			});
+        </script>
+
+        <title>${titleHeader} Export</title>
+	</head>
+	<body>
+        <div id="page-content">
+			<div id="header">
+				<a class="btn" id="btnExport">Export as CSV Spreadsheet</a>
+				<h1 id="headerMsg"></h1>
+			</div>
+			<div id="main">
+				<div id="msgContainer">
+					<div id="dammitIE" class="hideMe">
+						<svg version="1.1" id="warningIcon" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+							 viewBox="0 0 486.463 486.463" style="enable-background:new 0 0 486.463 486.463;" xml:space="preserve" width="80px" height="80px">
+						<g>
+							<g fill="#E600A1" stroke="#595959">
+								<path d="M243.225,333.382c-13.6,0-25,11.4-25,25s11.4,25,25,25c13.1,0,25-11.4,24.4-24.4
+									C268.225,344.682,256.925,333.382,243.225,333.382z" />
+								<path d="M474.625,421.982c15.7-27.1,15.8-59.4,0.2-86.4l-156.6-271.2c-15.5-27.3-43.5-43.5-74.9-43.5s-59.4,16.3-74.9,43.4
+									l-156.8,271.5c-15.6,27.3-15.5,59.8,0.3,86.9c15.6,26.8,43.5,42.9,74.7,42.9h312.8
+									C430.725,465.582,458.825,449.282,474.625,421.982z M440.625,402.382c-8.7,15-24.1,23.9-41.3,23.9h-312.8
+									c-17,0-32.3-8.7-40.8-23.4c-8.6-14.9-8.7-32.7-0.1-47.7l156.8-271.4c8.5-14.9,23.7-23.7,40.9-23.7c17.1,0,32.4,8.9,40.9,23.8
+									l156.7,271.4C449.325,369.882,449.225,387.482,440.625,402.382z"/>
+								<path d="M237.025,157.882c-11.9,3.4-19.3,14.2-19.3,27.3c0.6,7.9,1.1,15.9,1.7,23.8c1.7,30.1,3.4,59.6,5.1,89.7
+									c0.6,10.2,8.5,17.6,18.7,17.6c10.2,0,18.2-7.9,18.7-18.2c0-6.2,0-11.9,0.6-18.2c1.1-19.3,2.3-38.6,3.4-57.9
+									c0.6-12.5,1.7-25,2.3-37.5c0-4.5-0.6-8.5-2.3-12.5C260.825,160.782,248.925,155.082,237.025,157.882z"/>
+							</g>
+						</g>
+						</svg>
+					</div>
+					<h1 id="msg"></h1>
+				</div>
+				<div class="infoSection" id="legendContainer">
+					<!-- insert legend here -->
+				</div>
+				<div class="infoSection" id="tableContainer">
+
+
+					<!-- insert table here -->
+				</div>
+			</div>
+        </div>
+    </body>
+</html>
