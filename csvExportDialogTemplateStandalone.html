@@ -34,6 +34,10 @@
 				* tableID
 				  this is the fieldID of the table field you want to export.
 
+				* exportSelectedOnly
+				  send a value of "true" or "false". If "true", only export selected
+				  rows. If false, export all rows.
+
 				* titleHeader
                   this string is shown in the header of the dialog template
 				  adjascent to the "Export as CSV Spreadsheet" button
@@ -185,8 +189,8 @@
 			var defaultShowColumns	= '${defaultShowColumns}';
 			var fileNameBase		= '${fileNameBase}';
 			var displayLimit		= '${displayLimit}';
-			var exportSelectedOnly	= '${exportSelectedOnly}';
-			var exportAllChunks		= '${exportAllChunks}';
+			var exportSelectedOnly	= '${exportSelectedOnly}';		// <-- totally works
+			var exportAllChunks		= 'false';						// <-- does not work (yet?)
 
 			var windowName          = '${windowName}';
             var arServer            = '${arServer}';
@@ -359,16 +363,39 @@
 				}else{
 
 					/*
-						LEFT OFF HERE - 4/11/18 @ 1030
-						everything works except up to here on FFox, Chrome, IE and Edge
-						next step is to work out how to handle grabbing all table chunks
+						LEFT OFF HERE - 4/13/18 @ 0815
+						everything works up to here on FFox, Chrome, IE and Edge
+						except table chunking.
 
-						for one thing it's probably not a good idea to do that inside the
-						function that builds the table preview (on checkbox column select)
+						In principle, there's no reason we shouldn't be able to iterate
+						over table chunks here. When you select a chunk from the drop down
+						it is firing some javascript. At the end of the day, it's firing an
+						XHR back to the server and it's gonna fetch that data.
 
-						for another thing, it's open ended ... and it needs to talk to the
-						server, so we're gonna need a progress bar or something ...
+						This template is inserted into the legit mid-tier DOM, and I can reach
+						all the way up to the root window and access all of the ClientCore.js
+						internals. Somewhere in there, is the hook that menu is firing
+						but finding it ... whoo chile!
 
+						ClientCore.js is a *fucking nightmare* to try and trace through and
+						reverse engineer. I think my best bet is to try and fire run-process
+						commands in the parent window. Which I AM able to do!
+
+						I tried firing PERFORM-ACTION-TABLE-NEXT-CHUNK in the parent window
+						however ... the workflow log shows it not executing until the dialog
+						is closed. Even worse ... even though the log shows it, it doesn't
+						actually pull in the next table chunk even after the dialog closes.
+
+						I've traced that all the way through to DTable.prototype.Refresh
+						which seems to be detecting a window property and exiting. I THINK
+						what's happening here is that ClientCore.js is trying to track
+						"window state" ... I'm in a "modal dialog" (an iframe in a
+						shadowbox) so something BMC wrote is trying to be smarter than me,
+						blocking all of the other actions ... again ... I think.
+
+						It's a jungle in there.
+						You know somewhere, there's documentation for ClientCore.js.
+						Wish I had it.
 					*/
 
 					// insert the data from all rows
