@@ -1,0 +1,486 @@
+char-set: UTF-8
+#
+#  File exported Fri Apr 13 14:14:08 GMT 2018
+#
+begin schema
+   name           : ahicox:csv demo:dialog
+   core-version   : 2
+   upgrade-version: 0
+   num-fields     : 1
+   timestamp      : 1523627041
+   owner          : hicoxa
+   last-changed   : hicoxa
+   default-vui    : dialogView
+   num-vuis       : 1
+   export-version : 12
+   schema-type    : 4
+   next-field-id  : 536870914
+   permission     : 0\1
+   object-prop    : 3\0\0\90015\2\4\90016\4\1\1\
+  assoc-to-follow : 
+   assoc-sel-type : 0
+     assoc-list   : 0\
+vui  {
+   id             : 536870912
+   name           : dialogView
+   label          : dialogView
+   timestamp      : 1523627041
+   vui-locale     : 
+   vui-type       : 1
+   owner          : hicoxa
+   last-changed   : hicoxa
+   display-prop   : 9\20\4\10\dialogView\201\2\133520\202\2\73400\203\40\0\205\40\0\206\4\10\CSV Export\268\40\0\272\6\1\60019\4\21\ViewWebAlias536870912\
+   object-prop    : 2\90016\4\1\1\90015\2\4\
+}
+field {
+   id             : 536870913
+   name           : view_Main
+   datatype       : 42
+   fieldtype      : 0
+   create-mode    : 2
+   option         : 4
+   timestamp      : 1523627041
+   owner          : hicoxa
+   last-changed   : hicoxa
+   permission     : 0\1
+ display-instance : 536870912\11\3\41\2\0\0\132733\72000\4\6\1\7\40\2147483648\14\40\1\20\4\9\view_Mail\143\40\4294967295\170\40\0\228\6\1\310\6\0\5024\6\2\5025\6\1\
+   object-prop    : 2\90016\4\1\1\90015\2\4\
+}
+end
+begin schema
+   name           : ahicox:csv demo:gui
+   core-version   : 2
+   upgrade-version: 0
+   num-fields     : 6
+   timestamp      : 1523627086
+   owner          : hicoxa
+   last-changed   : hicoxa
+   default-vui    : Default Administrator View
+   num-vuis       : 1
+   export-version : 12
+   schema-type    : 4
+   next-field-id  : 536880915
+   permission     : 0\1
+   object-prop    : 3\0\0\90015\2\4\90016\4\1\1\
+  assoc-to-follow : 
+   assoc-sel-type : 0
+     assoc-list   : 0\
+vui  {
+   id             : 536870912
+   name           : Default Administrator View
+   label          : Default Administrator View
+   timestamp      : 1523627086
+   vui-locale     : 
+   vui-type       : 1
+   owner          : hicoxa
+   last-changed   : hicoxa
+   display-prop   : 3\20\4\26\Default Administrator View\265\4\0\\60019\4\21\ViewWebAlias536870912\
+   object-prop    : 2\90016\4\1\1\90015\2\4\
+}
+field {
+   id             : 536870913
+   name           : tableData
+   datatype       : 33
+   fieldtype      : 1
+   create-mode    : 2
+   option         : 4
+   timestamp      : 1523627041
+   owner          : hicoxa
+   last-changed   : hicoxa
+tablefield-schema : ahicox:csv:demo:data
+tablefield-server : @
+tablefield-query  : 4\1\1\7\2\6\1\
+tablefield-numcols: 3
+tablefield-maxret : 1000
+   permission     : 0\1
+ display-instance : 536870912\26\3\41\2\2249\2000\137232\52000\4\6\1\5\6\2\7\40\2147483648\14\40\1\20\4\9\tableData\40\41\4\2249\2000\137232\2000\137232\52000\2249\52000\143&
+ display-instance : \40\4294967295\170\40\0\224\40\1\226\6\0\227\6\1\5001\6\0\5006\4\10\Next Chunk\5007\4\14\Previous Chunk\5008\4\25\Table has not been loaded\5009\4\18\{2}&
+ display-instance :  of {3} results\5013\4\10\Select All\5014\4\12\DeSelect All\5015\4\7\Refresh\5016\4\0\\5023\6\0\5060\4\11\Preferences\5067\6\0\5121\6\1\5212\6\0\
+   object-prop    : 2\90016\4\1\1\90015\2\4\
+}
+field {
+   id             : 536870914
+   name           : btn_exportSelected
+   datatype       : 32
+   fieldtype      : 0
+   create-mode    : 2
+   option         : 4
+   timestamp      : 1523627041
+   owner          : hicoxa
+   last-changed   : hicoxa
+   permission     : 0\1
+ display-instance : 536870912\10\2\8\1\3\41\2\119460\52900\137007\55000\4\6\1\5\6\2\7\40\2147483649\21\41\2\0\0\0\0\110\4\27\Export Selected Rows to CSV\143\40\4294967295\17&
+ display-instance : 0\40\0\310\6\0\
+   object-prop    : 2\90016\4\1\1\90015\2\4\
+}
+field {
+   id             : 536870915
+   name           : btn_exportAll
+   datatype       : 32
+   fieldtype      : 1
+   create-mode    : 2
+   option         : 4
+   timestamp      : 1523627041
+   owner          : hicoxa
+   last-changed   : hicoxa
+   permission     : 0\1
+ display-instance : 536870912\10\2\8\1\3\41\2\100787\52900\118334\55000\4\6\1\5\6\2\7\40\2147483650\21\41\2\0\0\0\0\110\4\22\Export All Rows to CSV\143\40\4294967295\170\40\&
+ display-instance : 0\310\6\0\
+   object-prop    : 2\90016\4\1\1\90015\2\4\
+}
+field {
+   id             : 536880912
+   name           : tableData Key column
+   datatype       : 34
+   fieldtype      : 1
+   create-mode    : 2
+   option         : 4
+   timestamp      : 1523627041
+   owner          : hicoxa
+   last-changed   : hicoxa
+colfield-parent   : 536870913
+colfield-datafield: 8
+colfield-collength: 254
+colfield-datasrc  : 0
+   permission     : 0\1
+ display-instance : 536870912\7\3\41\2\0\0\10011\0\4\6\1\20\4\3\Key\220\40\4499\221\40\2\5021\6\0\5204\2\0\
+   object-prop    : 2\90016\4\1\1\90015\2\4\
+}
+field {
+   id             : 536880913
+   name           : tableData Value column
+   datatype       : 34
+   fieldtype      : 1
+   create-mode    : 2
+   option         : 4
+   timestamp      : 1523627041
+   owner          : hicoxa
+   last-changed   : hicoxa
+colfield-parent   : 536870913
+colfield-datafield: 536870913
+colfield-collength: 254
+colfield-datasrc  : 0
+   permission     : 0\1
+ display-instance : 536870912\7\3\41\2\0\0\10011\0\4\6\1\20\4\5\Value\220\40\10000\221\40\3\5021\6\0\5204\2\0\
+   object-prop    : 2\90016\4\1\1\90015\2\4\
+}
+field {
+   id             : 536880914
+   name           : tableData Entry ID column
+   datatype       : 34
+   fieldtype      : 1
+   create-mode    : 2
+   option         : 4
+   timestamp      : 1523627041
+   owner          : hicoxa
+   last-changed   : hicoxa
+colfield-parent   : 536870913
+colfield-datafield: 1
+colfield-collength: 254
+colfield-datasrc  : 0
+   permission     : 0\1
+ display-instance : 536870912\6\3\41\2\0\0\10011\0\4\6\1\20\4\8\Entry ID\220\40\3374\221\40\1\5021\6\0\
+   object-prop    : 2\90016\4\1\1\90015\2\4\
+}
+end
+begin schema
+   name           : ahicox:csv:demo:data
+   core-version   : 2
+   upgrade-version: 0
+   num-fields     : 10
+   timestamp      : 1523627040
+   owner          : hicoxa
+   last-changed   : hicoxa
+   default-vui    : Default Administrator View
+   num-vuis       : 1
+   export-version : 12
+   schema-type    : 1
+   next-field-id  : 536870914
+   permission     : 0\1
+   object-prop    : 3\0\0\90015\2\4\90016\4\1\1\
+  assoc-to-follow : 
+   assoc-sel-type : 0
+     assoc-list   : 0\
+vui  {
+   id             : 536870912
+   name           : Default Administrator View
+   label          : Default Administrator View
+   timestamp      : 1523627040
+   vui-locale     : 
+   vui-type       : 1
+   owner          : hicoxa
+   last-changed   : hicoxa
+   display-prop   : 1\20\4\26\Default Administrator View\
+   object-prop    : 2\90016\4\1\1\90015\2\4\
+}
+field {
+   id             : 1
+   name           : Entry ID
+   datatype       : 4
+   fieldtype      : 1
+   create-mode    : 2
+   option         : 3
+   timestamp      : 1523627040
+   owner          : hicoxa
+   last-changed   : hicoxa
+   length-units   : 0
+   maxlength      : 15
+   clob-store-opt : 0
+   menu-style     : 2
+   qbe-match-op   : 1
+   fulltext-optns : 0
+   default        : DATA-
+   permission     : 0\1
+   permission     : 4\1
+   permission     : 3\1
+ display-instance : 536870912\14\3\41\2\5399\2500\28233\4600\4\6\1\7\40\2147483640\20\4\10\Request ID\21\41\2\0\400\7086\2100\27\8\16\28\6\4\29\6\1\60\40\1\65\41\2\0\0\0\0\1&
+ display-instance : 43\40\4294967295\151\41\2\7649\0\22834\2100\170\40\0\231\6\1\
+   object-prop    : 2\90016\4\1\1\90015\2\4\
+}
+field {
+   id             : 2
+   name           : Submitter
+   datatype       : 4
+   fieldtype      : 1
+   create-mode    : 1
+   option         : 1
+   timestamp      : 1523627040
+   owner          : hicoxa
+   last-changed   : hicoxa
+   length-units   : 0
+   maxlength      : 254
+   clob-store-opt : 0
+   menu-style     : 2
+   qbe-match-op   : 1
+   fulltext-optns : 0
+   default        : $-1$
+   permission     : 4\1
+   permission     : 3\1
+ display-instance : 536870912\16\3\41\2\6074\5000\31158\7100\4\6\1\7\40\2147483641\20\4\9\Submitter\21\41\2\0\400\6411\2100\27\8\16\28\6\4\29\6\1\60\40\1\61\40\30\65\41\2\0\&
+ display-instance : 0\0\0\66\41\2\22722\0\25084\2100\143\40\4294967295\151\41\2\6974\0\22159\2100\170\40\0\231\6\0\
+   object-prop    : 2\90016\4\1\1\90015\2\4\
+}
+field {
+   id             : 3
+   name           : Create Date
+   datatype       : 7
+   fieldtype      : 1
+   create-mode    : 2
+   option         : 3
+   timestamp      : 1523627040
+   owner          : hicoxa
+   last-changed   : hicoxa
+   permission     : 4\1
+   permission     : 3\1
+ display-instance : 536870912\16\3\41\2\5061\7500\31157\9600\4\6\1\7\40\2147483642\20\4\11\Create Date\21\41\2\0\400\7424\2100\27\8\16\28\6\4\29\6\1\60\40\1\61\40\23\65\41\2&
+ display-instance : \0\0\0\0\66\41\2\23734\0\26096\2100\143\40\4294967295\151\41\2\7986\0\23171\2100\170\40\0\231\6\0\
+   object-prop    : 2\90016\4\1\1\90015\2\4\
+}
+field {
+   id             : 4
+   name           : Assigned To
+   datatype       : 4
+   fieldtype      : 1
+   create-mode    : 2
+   option         : 2
+   timestamp      : 1523627040
+   owner          : hicoxa
+   last-changed   : hicoxa
+   length-units   : 0
+   maxlength      : 254
+   clob-store-opt : 0
+   menu-style     : 2
+   qbe-match-op   : 1
+   fulltext-optns : 0
+   default        : $-1$
+   permission     : 4\1
+ display-instance : 536870912\16\3\41\2\5511\10000\31157\12100\4\6\1\7\40\2147483643\20\4\11\Assigned To\21\41\2\0\400\6974\2100\27\8\16\28\6\4\29\6\1\60\40\1\61\40\30\65\41&
+ display-instance : \2\0\0\0\0\66\41\2\23284\0\25646\2100\143\40\4294967295\151\41\2\7536\0\22721\2100\170\40\0\231\6\0\
+   object-prop    : 2\90016\4\1\1\90015\2\4\
+}
+field {
+   id             : 5
+   name           : Last Modified By
+   datatype       : 4
+   fieldtype      : 1
+   create-mode    : 2
+   option         : 3
+   timestamp      : 1523627040
+   owner          : hicoxa
+   last-changed   : hicoxa
+   length-units   : 0
+   maxlength      : 254
+   clob-store-opt : 0
+   menu-style     : 2
+   qbe-match-op   : 1
+   fulltext-optns : 0
+   permission     : 4\1
+ display-instance : 536870912\16\3\41\2\2699\12500\31157\14600\4\6\1\7\40\2147483644\20\4\16\Last Modified By\21\41\2\0\400\9786\2100\27\8\16\28\6\4\29\6\1\60\40\1\61\40\33\&
+ display-instance : 65\41\2\0\0\0\0\66\41\2\26096\0\28458\2100\143\40\4294967295\151\41\2\10348\0\25533\2100\170\40\0\231\6\0\
+   object-prop    : 2\90016\4\1\1\90015\2\4\
+}
+field {
+   id             : 6
+   name           : Modified Date
+   datatype       : 7
+   fieldtype      : 1
+   create-mode    : 2
+   option         : 3
+   timestamp      : 1523627040
+   owner          : hicoxa
+   last-changed   : hicoxa
+   permission     : 4\1
+ display-instance : 536870912\16\3\41\2\4049\15000\31158\17100\4\6\1\7\40\2147483645\20\4\13\Modified Date\21\41\2\0\400\8436\2100\27\8\16\28\6\4\29\6\1\60\40\1\61\40\23\65\&
+ display-instance : 41\2\0\0\0\0\66\41\2\24746\0\27108\2100\143\40\4294967295\151\41\2\8998\0\24183\2100\170\40\0\231\6\0\
+   object-prop    : 2\90016\4\1\1\90015\2\4\
+}
+field {
+   id             : 7
+   name           : Status
+   datatype       : 6
+   fieldtype      : 1
+   create-mode    : 2
+   option         : 1
+   timestamp      : 1523627040
+   owner          : hicoxa
+   last-changed   : hicoxa
+   enum-value     : off
+   enum-value     : on
+   default        : 1
+   permission     : 4\2
+   permission     : 3\1
+   permission     : 0\2
+ display-instance : 536870912\17\3\41\2\7986\17500\19797\19300\4\6\1\7\40\2147483646\20\4\6\Status\21\41\2\0\400\4499\1800\27\8\16\28\6\4\29\6\1\60\40\1\61\40\0\64\6\1\65\41&
+ display-instance : \2\0\0\0\0\143\40\4294967295\151\41\2\5061\400\11810\2200\170\40\0\230\4\12\2\0\off\1\on\231\6\0\
+   object-prop    : 2\90016\4\1\1\90015\2\4\
+}
+field {
+   id             : 8
+   name           : Key
+   datatype       : 4
+   fieldtype      : 1
+   create-mode    : 1
+   option         : 1
+   timestamp      : 1523627040
+   owner          : hicoxa
+   last-changed   : hicoxa
+   length-units   : 0
+   maxlength      : 254
+   clob-store-opt : 0
+   menu-style     : 2
+   qbe-match-op   : 1
+   fulltext-optns : 0
+   permission     : 0\2
+ display-instance : 536870912\17\3\41\2\9673\20000\31157\22100\4\6\1\7\40\2147483647\20\4\3\Key\21\41\2\0\400\2812\2100\27\8\16\28\6\4\29\6\1\60\40\1\61\40\50\65\41\2\0\0\0\&
+ display-instance : 0\66\41\2\19122\0\21484\2100\91\6\1\143\40\4294967295\151\41\2\3374\0\18559\2100\170\40\0\231\6\0\
+   object-prop    : 2\90016\4\1\1\90015\2\4\
+}
+field {
+   id             : 15
+   name           : Status History
+   datatype       : 4
+   fieldtype      : 1
+   create-mode    : 2
+   option         : 3
+   timestamp      : 1523627040
+   owner          : hicoxa
+   last-changed   : hicoxa
+   permission     : 4\1
+   permission     : 3\1
+   object-prop    : 2\90016\4\1\1\90015\2\4\
+}
+field {
+   id             : 536870913
+   name           : Value
+   datatype       : 4
+   fieldtype      : 1
+   create-mode    : 1
+   option         : 1
+   timestamp      : 1523627040
+   owner          : hicoxa
+   last-changed   : hicoxa
+   length-units   : 0
+   maxlength      : 1023
+   clob-store-opt : 0
+   menu-style     : 2
+   qbe-match-op   : 1
+   fulltext-optns : 0
+   permission     : 0\2
+ display-instance : 536870912\24\3\41\2\8436\22500\31158\24600\4\6\1\5\6\2\7\40\2147483648\14\40\1\20\4\5\Value\21\41\2\0\400\4049\2100\27\8\16\28\6\4\29\6\1\60\40\1\61\40\5&
+ display-instance : 0\65\41\2\0\0\0\0\66\41\2\20359\0\22721\2100\91\6\1\143\40\4294967295\151\41\2\4611\0\19796\2100\170\40\0\231\6\0\288\6\0\289\4\4\0x00\290\4\4\0x00\310\6&
+ display-instance : \0\5116\6\0\
+   object-prop    : 2\90016\4\1\1\90015\2\4\
+}
+end
+begin active link
+   name           : ahicox:csv demo:exportAll
+   timestamp      : 1523628506
+   export-version : 12
+   owner          : hicoxa
+   last-changed   : hicoxa
+   actlink-order  : 0
+   wk-conn-type   : 1
+   schema-name    : ahicox:csv demo:gui
+   actlink-mask   : 1
+   actlink-control: 536870915
+   enable         : 1
+   permission     : 0 
+   action {
+      open-server : @
+      open-schema : ahicox:csv demo:dialog
+      open-vui    : dialogView
+      open-close  : 1
+      open-input  : 1\536870913\105\50\21\101\4\27\ahicox:csv demo:template-v2\101\4\18\exportSelectedOnly\101\4\5\false\101\4\18\defaultShowColumns\104\1\104\1\104\1\104\1\
+      open-input  : 104\1\104\1\104\1\104\1\101\4\1\[\101\4\1\"\101\4\3\Key\101\4\1\"\101\4\1\,\101\4\1\"\101\4\5\Value\101\4\1\"\101\4\1\]\101\4\8\viewName\101\1\16\101\4\1
+      open-input  : 1\titleHeader\101\4\38\The Planets of the Doctor Who Universe\101\4\8\formName\101\1\5\101\4\7\tableID\101\4\9\536870913\101\4\10\windowName\101\1\33\101
+      open-input  : \4\8\arServer\101\1\6\101\4\12\fileNameBase\101\4\10\dwp-export\101\4\12\displayLimit\101\4\2\18\
+      open-output : 0\
+      open-winmod : 20
+      open-target : New
+      open-pollint: 0
+      open-continu: 1
+      open-suppres: 0
+      open-msgtype: 0
+      open-msgnum : 10000
+      open-msgpane: 0
+   }
+   object-prop    : 2\90015\2\4\90016\4\1\1\
+   errhandler-opt : 0
+   errhandler-name: 
+end
+begin active link
+   name           : ahicox:csv demo:exportSelected
+   timestamp      : 1523628533
+   export-version : 12
+   owner          : hicoxa
+   last-changed   : hicoxa
+   actlink-order  : 0
+   wk-conn-type   : 1
+   schema-name    : ahicox:csv demo:gui
+   actlink-mask   : 1
+   actlink-control: 536870914
+   enable         : 1
+   permission     : 0 
+   action {
+      open-server : @
+      open-schema : ahicox:csv demo:dialog
+      open-vui    : dialogView
+      open-close  : 1
+      open-input  : 1\536870913\105\50\21\101\4\27\ahicox:csv demo:template-v2\101\4\18\exportSelectedOnly\101\4\4\true\101\4\18\defaultShowColumns\104\1\104\1\104\1\104\1\1
+      open-input  : 04\1\104\1\104\1\104\1\101\4\1\[\101\4\1\"\101\4\3\Key\101\4\1\"\101\4\1\,\101\4\1\"\101\4\5\Value\101\4\1\"\101\4\1\]\101\4\8\viewName\101\1\16\101\4\11
+      open-input  : \titleHeader\101\4\38\The Planets of the Doctor Who Universe\101\4\8\formName\101\1\5\101\4\7\tableID\101\4\9\536870913\101\4\10\windowName\101\1\33\101\
+      open-input  : 4\8\arServer\101\1\6\101\4\12\fileNameBase\101\4\10\dwp-export\101\4\12\displayLimit\101\4\2\18\
+      open-output : 0\
+      open-winmod : 20
+      open-target : New
+      open-pollint: 0
+      open-continu: 1
+      open-suppres: 0
+      open-msgtype: 0
+      open-msgnum : 10000
+      open-msgpane: 0
+   }
+   object-prop    : 2\90015\2\4\90016\4\1\1\
+   errhandler-opt : 0
+   errhandler-name: 
+end
